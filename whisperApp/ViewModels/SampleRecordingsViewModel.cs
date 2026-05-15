@@ -34,7 +34,12 @@ public partial class SampleRecordingsViewModel : BaseViewModel
 
     public async Task InitializeAsync()
     {
-        // Încarcă modelul dacă nu e deja
+        System.Diagnostics.Debug.WriteLine("[Samples] InitializeAsync started");
+
+        // Încarcă lista de sample-uri IMEDIAT (nu aștepta modelul)
+        await LoadSamplesAsync();
+
+        // Apoi încarcă modelul dacă nu e deja
         if (!_whisperService.IsModelLoaded)
         {
             IsModelLoading = true;
@@ -47,19 +52,21 @@ public partial class SampleRecordingsViewModel : BaseViewModel
             ModelLoaded = true;
         }
 
-        // Încarcă lista de sample-uri
-        await LoadSamplesAsync();
+        System.Diagnostics.Debug.WriteLine($"[Samples] InitializeAsync done. ModelLoaded={ModelLoaded}, SampleFiles.Count={SampleFiles.Count}");
     }
 
     private async Task LoadSamplesAsync()
     {
         SampleFiles.Clear();
+        System.Diagnostics.Debug.WriteLine("[Samples] LoadSamplesAsync started");
 
         // 1. Încarcă din Resources/Raw/Samples (pre-incluse în app)
         await LoadBundledSamplesAsync();
 
         // 2. Încarcă din folderul local (importate de user)
         LoadImportedSamples();
+
+        System.Diagnostics.Debug.WriteLine($"[Samples] LoadSamplesAsync done. Total files: {SampleFiles.Count}");
     }
 
     private async Task LoadBundledSamplesAsync()
@@ -67,60 +74,56 @@ public partial class SampleRecordingsViewModel : BaseViewModel
         var discoveredFiles = new List<string>();
 
 #if ANDROID
-        // Pe Android, MAUI pune TOATE fișierele din Resources/Raw flat în assets root
-        // Deci "Resources/Raw/Samples/test.mp3" devine accesibil ca "test.mp3"
         try
         {
             var assetManager = Android.App.Application.Context.Assets;
             
-            // Listează toate fișierele din root-ul assets
-            var allFiles = assetManager?.List("");
-            if (allFiles != null)
-            {
-                foreach (var file in allFiles)
-                {
-                    var ext = Path.GetExtension(file).ToLowerInvariant();
-                    if (ext == ".mp3" || ext == ".wav" || ext == ".m4a")
-                    {
-                        // Exclude fișierele care sunt ale recorder-ului (recording_*.wav)
-                        if (!file.StartsWith("recording_", StringComparison.OrdinalIgnoreCase))
-                        {
-                            discoveredFiles.Add(file);
-                        }
-                    }
-                }
-            }
+            // Din log: structura e Resources/Raw/Samples
+            var searchPaths = new[] 
+            { 
+                "Resources/Raw/Samples",
+                "Samples", 
+                "Resources/Raw",
+                ""  // root
+            };
 
-            // Încearcă și în subfoldere comune
-            var subfolders = new[] { "Samples", "samples", "Raw", "raw" };
-            foreach (var folder in subfolders)
+            foreach (var basePath in searchPaths)
             {
                 try
                 {
-                    var files = assetManager?.List(folder);
-                    if (files != null)
+                    var files = assetManager?.List(basePath);
+                    if (files == null) continue;
+                    
+                    System.Diagnostics.Debug.WriteLine($"[Samples] Listing '{basePath}': {string.Join(", ", files)}");
+
+                    foreach (var file in files)
                     {
-                        foreach (var file in files)
+                        var ext = Path.GetExtension(file).ToLowerInvariant();
+                        if (ext == ".mp3" || ext == ".wav" || ext == ".m4a" || ext == ".ogg")
                         {
-                            var ext = Path.GetExtension(file).ToLowerInvariant();
-                            if (ext == ".mp3" || ext == ".wav" || ext == ".m4a")
+                            var fullPath = string.IsNullOrEmpty(basePath) ? file : $"{basePath}/{file}";
+                            if (!discoveredFiles.Contains(fullPath))
                             {
-                                // Salvează cu prefix-ul folderului pentru acces
-                                discoveredFiles.Add($"{folder}/{file}");
+                                discoveredFiles.Add(fullPath);
+                                System.Diagnostics.Debug.WriteLine($"[Samples] Found audio: {fullPath}");
                             }
                         }
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Samples] Error listing '{basePath}': {ex.Message}");
+                }
+
+                // Dacă am găsit fișiere, nu mai căuta în alte locuri
+                if (discoveredFiles.Count > 0) break;
             }
 
-            System.Diagnostics.Debug.WriteLine($"[Samples] Discovered {discoveredFiles.Count} audio files in assets");
-            foreach (var f in discoveredFiles)
-                System.Diagnostics.Debug.WriteLine($"[Samples]   - {f}");
+            System.Diagnostics.Debug.WriteLine($"[Samples] Total discovered: {discoveredFiles.Count}");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[Samples] Error listing assets: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[Samples] Error: {ex.Message}");
         }
 #endif
 
@@ -305,20 +308,23 @@ public partial class SampleRecordingsViewModel : BaseViewModel
         var tempDir = Path.Combine(FileSystem.CacheDirectory, "samples");
         Directory.CreateDirectory(tempDir);
 
-        var safeFileName = Path.GetFileName(fileName); // elimină eventualul prefix de folder
+        var safeFileName = Path.GetFileName(fileName); // doar numele fișierului, fără folder
         var destPath = Path.Combine(tempDir, safeFileName);
 
         if (!File.Exists(destPath))
         {
 #if ANDROID
-            // Pe Android, accesăm direct prin AssetManager
+            // fileName conține path-ul complet din assets (ex: "Resources/Raw/Samples/test.mp3")
             var assetManager = Android.App.Application.Context.Assets;
             using var stream = assetManager!.Open(fileName);
-#else
-            using var stream = await FileSystem.OpenAppPackageFileAsync(fileName);
-#endif
             using var dest = File.Create(destPath);
             await stream.CopyToAsync(dest);
+            System.Diagnostics.Debug.WriteLine($"[Samples] Extracted {fileName} -> {destPath}");
+#else
+            using var stream = await FileSystem.OpenAppPackageFileAsync(safeFileName);
+            using var dest = File.Create(destPath);
+            await stream.CopyToAsync(dest);
+#endif
         }
 
         return destPath;
