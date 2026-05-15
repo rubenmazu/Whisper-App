@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WhisperOfflineApp.Views.RegisterPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView>
+        <Grid RowDefinitions="Auto, Auto, *" Padding="32" MinimumHeightRequest="700">
+
+            <!-- Header -->
+            <VerticalStackLayout Grid.Row="0" Spacing="12" Padding="0,48,0,32">
+                <Border StrokeThickness="0" WidthRequest="80" HeightRequest="80"
+                        HorizontalOptions="Center" BackgroundColor="{StaticResource SurfaceElevated}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="40"/>
+                    </Border.StrokeShape>
+                    <Label Text="✨" FontSize="36" 
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+                
+                <Label Text="Cont Nou" FontSize="28" FontAttributes="Bold"
+                       TextColor="{StaticResource TextPrimary}" HorizontalOptions="Center"/>
+                <Label Text="Creează-ți contul pentru a salva transcrierile"
+                       FontSize="14" TextColor="{StaticResource TextSecondary}" 
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Form -->
+            <VerticalStackLayout Grid.Row="1" Spacing="14">
+
+                <!-- Error -->
+                <Border BackgroundColor="#2D1215" Stroke="{StaticResource AccentRed}" 
+                        StrokeThickness="1" IsVisible="{Binding HasError}" Padding="14">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="⚠️" FontSize="16" VerticalOptions="Center"/>
+                        <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource AccentRed}" 
+                               FontSize="14" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </Border>
+
+                <!-- Username -->
+                <Border Style="{StaticResource InputBorder}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="👤" FontSize="18" VerticalOptions="Center" Opacity="0.6"/>
+                        <Entry Text="{Binding Username}" Placeholder="Nume utilizator"
+                               HorizontalOptions="FillAndExpand" ReturnType="Next"/>
+                    </HorizontalStackLayout>
+                </Border>
+
+                <!-- Email -->
+                <Border Style="{StaticResource InputBorder}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="📧" FontSize="18" VerticalOptions="Center" Opacity="0.6"/>
+                        <Entry Text="{Binding Email}" Placeholder="Email (opțional)"
+                               Keyboard="Email" HorizontalOptions="FillAndExpand" ReturnType="Next"/>
+                    </HorizontalStackLayout>
+                </Border>
+
+                <!-- Password -->
+                <Border Style="{StaticResource InputBorder}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="🔒" FontSize="18" VerticalOptions="Center" Opacity="0.6"/>
+                        <Entry Text="{Binding Password}" Placeholder="Parolă (min. 8 caractere)"
+                               IsPassword="True" HorizontalOptions="FillAndExpand" ReturnType="Next"/>
+                    </HorizontalStackLayout>
+                </Border>
+
+                <!-- Confirm Password -->
+                <Border Style="{StaticResource InputBorder}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <HorizontalStackLayout Spacing="12">
+                        <Label Text="🔐" FontSize="18" VerticalOptions="Center" Opacity="0.6"/>
+                        <Entry Text="{Binding ConfirmPassword}" Placeholder="Confirmă parola"
+                               IsPassword="True" HorizontalOptions="FillAndExpand" ReturnType="Done"/>
+                    </HorizontalStackLayout>
+                </Border>
+
+                <!-- Register Button -->
+                <Button Text="Creează Cont" Command="{Binding RegisterCommand}"
+                        Style="{StaticResource PrimaryButton}" Margin="0,8,0,0"/>
+
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                  IsVisible="{Binding IsBusy}"
+                                  HorizontalOptions="Center"/>
+
+                <!-- Separator -->
+                <Grid ColumnDefinitions="*, Auto, *" Margin="0,8">
+                    <BoxView Grid.Column="0" HeightRequest="1" 
+                             BackgroundColor="{StaticResource BorderDefault}" 
+                             VerticalOptions="Center"/>
+                    <Label Grid.Column="1" Text="sau" 
+                           TextColor="{StaticResource TextMuted}" 
+                           FontSize="12" Margin="12,0"/>
+                    <BoxView Grid.Column="2" HeightRequest="1" 
+                             BackgroundColor="{StaticResource BorderDefault}" 
+                             VerticalOptions="Center"/>
+                </Grid>
+
+                <!-- Back to login -->
+                <Button Text="Am deja un cont"
+                        Command="{Binding GoToLoginCommand}"
+                        Style="{StaticResource SecondaryButton}"/>
+            </VerticalStackLayout>
+
+            <BoxView Grid.Row="2"/>
+        </Grid>
+    </ScrollView>
+</ContentPage>

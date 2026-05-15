@@ -1,0 +1,89 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net8.0-android</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<RootNamespace>WhisperOfflineApp</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ApplicationId>com.yourname.whisperoffline</ApplicationId>
+		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationTitle>Whisper Offline</ApplicationTitle>
+		
+		<!-- Android Specific -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
+		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+		<RunAOTCompilation>false</RunAOTCompilation>
+		<EnableLLVM>false</EnableLLVM>
+		
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Platforms>AnyCPU;x86</Platforms>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<AndroidEnableProguard>true</AndroidEnableProguard>
+		<ProguardConfiguration>Platforms\Android\proguard.cfg</ProguardConfiguration>
+		<!-- AOT dezactivat - SDK lipsă -->
+		<RunAOTCompilation>false</RunAOTCompilation>
+		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- .NET MAUI -->
+		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.100" />
+		
+		<!-- ONNX Runtime pentru inferență locală -->
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.17.3" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Extensions" Version="0.10.0" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.17.3" />
+
+		<!-- SQLite pentru baza de date locală -->
+		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.8" />
+
+		<!-- Hash parole -->
+		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+
+		<!-- Dependency Injection -->
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+
+		<!-- Audio recording -->
+		<PackageReference Include="Plugin.Maui.Audio" Version="3.0.0" />
+
+		<!-- Community Toolkit MVVM -->
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="8.0.1" />
+	</ItemGroup>
+
+	<!-- App Icon -->
+	<ItemGroup>
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appicon.svg" Color="#0D1117" />
+	</ItemGroup>
+
+	<!-- Splash Screen -->
+	<ItemGroup>
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0D1117" BaseSize="128,128" />
+	</ItemGroup>
+
+	<!-- Images -->
+	<ItemGroup>
+		<MauiImage Include="Resources\Images\*" />
+	</ItemGroup>
+
+	<!-- Fonts -->
+	<ItemGroup>
+		<MauiFont Include="Resources\Fonts\*" />
+	</ItemGroup>
+
+	<!-- Modelele AI ca Raw assets pentru Android -->
+	<ItemGroup Condition="$(TargetFramework.Contains('android'))">
+		<AndroidAsset Include="Resources\Raw\encoder.onnx" />
+		<AndroidAsset Include="Resources\Raw\decoder.onnx" />
+		<AndroidAsset Include="Resources\Raw\vocab.json" />
+		<AndroidAsset Include="Resources\Raw\special_tokens.json" />
+		<AndroidAsset Include="Resources\Raw\model_config.json" />
+	</ItemGroup>
+
+</Project>

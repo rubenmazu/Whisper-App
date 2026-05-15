@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:WhisperOfflineApp.Models"
+             x:Class="WhisperOfflineApp.Views.HistoryPage"
+             BackgroundColor="{StaticResource PageBackground}" 
+             Title="Istoric">
+
+    <Grid RowDefinitions="Auto, *">
+
+        <!-- Header -->
+        <Border Grid.Row="0" BackgroundColor="{StaticResource CardBackground}" 
+                StrokeThickness="0" Padding="20,16">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="0,0,16,16"/>
+            </Border.StrokeShape>
+            <HorizontalStackLayout Spacing="10">
+                <Label Text="📋" FontSize="18" VerticalOptions="Center"/>
+                <Label Text="Transcrierile tale" 
+                       TextColor="{StaticResource TextPrimary}" 
+                       FontSize="18" FontAttributes="Bold"
+                       VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+        </Border>
+
+        <!-- Lista -->
+        <CollectionView Grid.Row="1" 
+                        ItemsSource="{Binding Transcriptions}"
+                        SelectionMode="None"
+                        Margin="0,8,0,0">
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" 
+                                     Spacing="16" Padding="32">
+                    <Border StrokeThickness="0" WidthRequest="80" HeightRequest="80"
+                            HorizontalOptions="Center" 
+                            BackgroundColor="{StaticResource SurfaceElevated}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="40"/>
+                        </Border.StrokeShape>
+                        <Label Text="🎙️" FontSize="36" 
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <Label Text="Nicio transcriere încă" 
+                           TextColor="{StaticResource TextPrimary}" 
+                           FontSize="18" FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Înregistrează ceva și transcrierea va apărea aici" 
+                           TextColor="{StaticResource TextSecondary}" 
+                           FontSize="14" HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Transcription">
+                    <SwipeView>
+                        <!-- Swipe stânga pentru ștergere -->
+                        <SwipeView.LeftItems>
+                            <SwipeItems>
+                                <SwipeItem Text="🗑️ Șterge" BackgroundColor="{StaticResource AccentRed}"
+                                          Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, 
+                                                   Path=BindingContext.DeleteTranscriptionCommand}"
+                                          CommandParameter="{Binding .}"/>
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+
+                        <!-- Card transcriere -->
+                        <Border BackgroundColor="{StaticResource CardBackground}" 
+                                Stroke="{StaticResource BorderDefault}" StrokeThickness="1"
+                                Margin="16,6" Padding="18">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="14"/>
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="10">
+                                <!-- Header cu data și limba -->
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="📅" FontSize="12" VerticalOptions="Center"/>
+                                        <Label Text="{Binding CreatedAt, StringFormat='{0:dd MMM yyyy, HH:mm}'}" 
+                                               TextColor="{StaticResource AccentBlue}" 
+                                               FontSize="13" FontAttributes="Bold"
+                                               VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+                                    <Border Grid.Column="1" BackgroundColor="{StaticResource SurfaceElevated}"
+                                            StrokeThickness="0" Padding="8,4">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="6"/>
+                                        </Border.StrokeShape>
+                                        <Label Text="{Binding Language, StringFormat='{0}'}" 
+                                               TextColor="{StaticResource TextMuted}" 
+                                               FontSize="11" FontAttributes="Bold"/>
+                                    </Border>
+                                </Grid>
+                                
+                                <!-- Separator -->
+                                <BoxView HeightRequest="1" 
+                                         BackgroundColor="{StaticResource BorderMuted}" 
+                                         Opacity="0.5"/>
+                                
+                                <!-- Text -->
+                                <Label Text="{Binding Text}" 
+                                       TextColor="{StaticResource TextPrimary}" 
+                                       FontSize="15" MaxLines="5" 
+                                       LineBreakMode="TailTruncation"
+                                       LineHeight="1.3"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

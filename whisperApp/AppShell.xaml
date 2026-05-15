@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:WhisperOfflineApp.Views"
+       x:Class="WhisperOfflineApp.AppShell"
+       BackgroundColor="{StaticResource CardBackground}"
+       FlyoutBehavior="Disabled"
+       Shell.NavBarIsVisible="False"
+       Shell.TabBarBackgroundColor="{StaticResource TabBarBackground}"
+       Shell.TabBarForegroundColor="{StaticResource TabBarActive}"
+       Shell.TabBarUnselectedColor="{StaticResource TabBarInactive}"
+       Shell.TabBarTitleColor="{StaticResource TabBarActive}">
+
+    <!-- Pagina de login ca pagină inițială -->
+    <ShellContent Route="LoginPage" 
+                  ContentTemplate="{DataTemplate views:LoginPage}" 
+                  FlyoutItemIsVisible="False"/>
+
+    <!-- Pagina de register (ascunsă din meniu) -->
+    <ShellContent Route="RegisterPage"
+                  ContentTemplate="{DataTemplate views:RegisterPage}"
+                  FlyoutItemIsVisible="False"/>
+
+    <!-- Tab Bar pentru aplicația principală -->
+    <TabBar Route="MainTabs" FlyoutItemIsVisible="False">
+        <ShellContent Title="Înregistrare"
+                      ContentTemplate="{DataTemplate views:RecorderPage}"
+                      Route="RecorderPage"/>
+
+        <ShellContent Title="Istoric"
+                      ContentTemplate="{DataTemplate views:HistoryPage}"
+                      Route="HistoryPage"/>
+    </TabBar>
+
+</Shell>

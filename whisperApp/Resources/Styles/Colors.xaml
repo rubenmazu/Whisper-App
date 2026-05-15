@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Background Colors -->
+    <Color x:Key="PageBackground">#0D1117</Color>
+    <Color x:Key="CardBackground">#161B22</Color>
+    <Color x:Key="CardBackgroundHover">#1C2128</Color>
+    <Color x:Key="SurfaceElevated">#21262D</Color>
+
+    <!-- Border Colors -->
+    <Color x:Key="BorderDefault">#30363D</Color>
+    <Color x:Key="BorderMuted">#21262D</Color>
+    <Color x:Key="BorderAccent">#388BFD</Color>
+
+    <!-- Text Colors -->
+    <Color x:Key="TextPrimary">#E6EDF3</Color>
+    <Color x:Key="TextSecondary">#8B949E</Color>
+    <Color x:Key="TextMuted">#6E7681</Color>
+    <Color x:Key="TextLink">#58A6FF</Color>
+
+    <!-- Accent Colors -->
+    <Color x:Key="AccentBlue">#58A6FF</Color>
+    <Color x:Key="AccentGreen">#3FB950</Color>
+    <Color x:Key="AccentGreenDark">#238636</Color>
+    <Color x:Key="AccentRed">#F85149</Color>
+    <Color x:Key="AccentOrange">#D29922</Color>
+    <Color x:Key="AccentPurple">#A371F7</Color>
+
+    <!-- Gradient-like accent -->
+    <Color x:Key="GradientStart">#388BFD</Color>
+    <Color x:Key="GradientEnd">#A371F7</Color>
+
+    <!-- Recording Colors -->
+    <Color x:Key="RecordingActive">#F85149</Color>
+    <Color x:Key="RecordingIdle">#3FB950</Color>
+    <Color x:Key="RecordingPulse">#FF6B6B</Color>
+
+    <!-- Tab Bar -->
+    <Color x:Key="TabBarBackground">#161B22</Color>
+    <Color x:Key="TabBarActive">#58A6FF</Color>
+    <Color x:Key="TabBarInactive">#6E7681</Color>
+
+</ResourceDictionary>

@@ -1,0 +1,39 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ONNX Models - nu urca modelele (sunt prea mari)
+Resources/Raw/*.onnx
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+
+# NuGet
+*.nupkg
+**/packages/*
+*.nuget.props
+*.nuget.targets
+
+# VS / Rider
+.vs/
+.idea/
+*.rsuser
+*.DotSettings.user
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# MAUI specific
+*.apk
+*.aab
+*.ipa

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WhisperOfflineApp.Views.RecorderPage"
+             BackgroundColor="{StaticResource PageBackground}" 
+             Title="Înregistrare">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20">
+
+            <!-- Model loading state -->
+            <Border BackgroundColor="{StaticResource CardBackground}" 
+                    Stroke="{StaticResource BorderDefault}" StrokeThickness="1"
+                    IsVisible="{Binding IsModelLoading}" Padding="24">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
+                    <ActivityIndicator IsRunning="True" WidthRequest="40" HeightRequest="40"/>
+                    <Label Text="Se pregătește modelul AI..." 
+                           TextColor="{StaticResource TextPrimary}" 
+                           FontSize="16" FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
+                    <Label Text="{Binding ModelLoadingStatus}" 
+                           TextColor="{StaticResource TextSecondary}" 
+                           HorizontalOptions="Center" FontSize="13"/>
+                    <ProgressBar Progress="0.5" ProgressColor="{StaticResource AccentBlue}"
+                                 BackgroundColor="{StaticResource BorderDefault}"
+                                 Margin="20,0"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Error message - model load failure -->
+            <Border BackgroundColor="#2D1215" Stroke="{StaticResource AccentRed}" 
+                    StrokeThickness="1" IsVisible="{Binding HasError}" Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="⚠️" FontSize="16" VerticalOptions="Center"/>
+                        <Label Text="Eroare" TextColor="{StaticResource AccentRed}" 
+                               FontAttributes="Bold" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource AccentRed}" 
+                           FontSize="13"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Recorder UI -->
+            <VerticalStackLayout Spacing="28" 
+                                 IsVisible="{Binding IsModelLoading, 
+                                 Converter={StaticResource InvertedBoolConverter}}">
+
+                <!-- Spațiu sus -->
+                <BoxView HeightRequest="20"/>
+
+                <!-- Buton înregistrare - cercul mare -->
+                <Grid HorizontalOptions="Center" WidthRequest="200" HeightRequest="200">
+                    <!-- Outer ring glow -->
+                    <Border StrokeThickness="3" WidthRequest="200" HeightRequest="200"
+                            HorizontalOptions="Center" VerticalOptions="Center"
+                            BackgroundColor="Transparent">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="100"/>
+                        </Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" 
+                                        Binding="{Binding IsRecording}" Value="True">
+                                <Setter Property="Stroke" Value="{StaticResource RecordingActive}"/>
+                                <Setter Property="Opacity" Value="0.6"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Border" 
+                                        Binding="{Binding IsRecording}" Value="False">
+                                <Setter Property="Stroke" Value="{StaticResource BorderDefault}"/>
+                                <Setter Property="Opacity" Value="1"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border/>
+                    </Border>
+
+                    <!-- Inner button -->
+                    <Border StrokeThickness="0" WidthRequest="160" HeightRequest="160"
+                            HorizontalOptions="Center" VerticalOptions="Center">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="80"/>
+                        </Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" 
+                                        Binding="{Binding IsRecording}" Value="True">
+                                <Setter Property="BackgroundColor" Value="{StaticResource RecordingActive}"/>
+                            </DataTrigger>
+                            <DataTrigger TargetType="Border" 
+                                        Binding="{Binding IsRecording}" Value="False">
+                                <Setter Property="BackgroundColor" Value="{StaticResource AccentGreenDark}"/>
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Grid>
+                            <Button Command="{Binding ToggleRecordingCommand}"
+                                    BackgroundColor="Transparent" 
+                                    WidthRequest="160" HeightRequest="160"
+                                    CornerRadius="80" BorderWidth="0"/>
+                            <Label HorizontalOptions="Center" VerticalOptions="Center"
+                                   InputTransparent="True">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" 
+                                                Binding="{Binding IsRecording}" Value="True">
+                                        <Setter Property="Text" Value="⏹"/>
+                                        <Setter Property="FontSize" Value="56"/>
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Label" 
+                                                Binding="{Binding IsRecording}" Value="False">
+                                        <Setter Property="Text" Value="🎙️"/>
+                                        <Setter Property="FontSize" Value="56"/>
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Timer -->
+                <Label Text="{Binding RecordingDuration}" 
+                       FontSize="44" FontAttributes="Bold"
+                       TextColor="{StaticResource TextPrimary}" 
+                       HorizontalOptions="Center"
+                       IsVisible="{Binding IsRecording}"
+                       CharacterSpacing="2"/>
+
+                <!-- Status text -->
+                <Label HorizontalOptions="Center" FontSize="15">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" 
+                                    Binding="{Binding IsRecording}" Value="True">
+                            <Setter Property="Text" Value="● Înregistrez... Apasă pentru a opri"/>
+                            <Setter Property="TextColor" Value="{StaticResource RecordingActive}"/>
+                        </DataTrigger>
+                        <DataTrigger TargetType="Label" 
+                                    Binding="{Binding IsRecording}" Value="False">
+                            <Setter Property="Text" Value="Apasă butonul pentru a începe"/>
+                            <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+
+                <!-- Transcribing indicator -->
+                <Border BackgroundColor="{StaticResource CardBackground}" 
+                        Stroke="{StaticResource AccentBlue}" StrokeThickness="1"
+                        IsVisible="{Binding IsTranscribing}" Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="16"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                        <ActivityIndicator IsRunning="True" WidthRequest="32" HeightRequest="32"/>
+                        <Label Text="Procesez cu AI local..." 
+                               TextColor="{StaticResource TextPrimary}" 
+                               FontSize="15" HorizontalOptions="Center"/>
+                        <Label Text="Aceasta poate dura câteva secunde"
+                               TextColor="{StaticResource TextMuted}"
+                               FontSize="12" HorizontalOptions="Center"/>
+                        <Button Text="Anulează" Command="{Binding CancelTranscriptionCommand}"
+                                BackgroundColor="Transparent" TextColor="{StaticResource AccentRed}"
+                                FontSize="14"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Rezultat transcriere -->
+                <Border BackgroundColor="{StaticResource CardBackground}" 
+                        Stroke="{StaticResource AccentGreen}" StrokeThickness="1"
+                        IsVisible="{Binding TranscriptionText, 
+                        Converter={StaticResource StringToBoolConverter}}" Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="16"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="12">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="✅" FontSize="14" VerticalOptions="Center"/>
+                            <Label Text="Transcriere completă" 
+                                   TextColor="{StaticResource AccentGreen}" 
+                                   FontSize="13" FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        <BoxView HeightRequest="1" BackgroundColor="{StaticResource BorderDefault}"/>
+                        <Label Text="{Binding TranscriptionText}" 
+                               TextColor="{StaticResource TextPrimary}" 
+                               FontSize="16" LineHeight="1.4"/>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
