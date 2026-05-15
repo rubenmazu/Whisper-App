@@ -885,7 +885,12 @@ public class WhisperService : IWhisperService, IDisposable
             using (results)
             {
                 var logits = results.First().AsTensor<float>();
-                var dims = logits.Dimensions;
+                var dimsSpan = logits.Dimensions;
+
+                // Copy to a regular array immediately
+                int[] dims = new int[dimsSpan.Length];
+                for (int i = 0; i < dimsSpan.Length; i++)
+                    dims[i] = dimsSpan[i];
                 System.Diagnostics.Debug.WriteLine($"Step {step}: logits shape = [{string.Join(",", Enumerable.Range(0, dims.Length).Select(i => dims[i].ToString()))}]");
 
                 // Determină poziția corectă pentru logits
