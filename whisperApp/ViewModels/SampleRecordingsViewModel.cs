@@ -67,38 +67,56 @@ public partial class SampleRecordingsViewModel : BaseViewModel
         var discoveredFiles = new List<string>();
 
 #if ANDROID
-        // Pe Android putem lista dinamic fișierele din assets
+        // Pe Android, MAUI pune TOATE fișierele din Resources/Raw flat în assets root
+        // Deci "Resources/Raw/Samples/test.mp3" devine accesibil ca "test.mp3"
         try
         {
             var assetManager = Android.App.Application.Context.Assets;
             
-            // Încearcă diferite căi posibile unde MAUI pune Raw assets
-            var possiblePaths = new[] { "Samples", "Resources/Raw/Samples", "raw/Samples" };
-            
-            foreach (var basePath in possiblePaths)
+            // Listează toate fișierele din root-ul assets
+            var allFiles = assetManager?.List("");
+            if (allFiles != null)
+            {
+                foreach (var file in allFiles)
+                {
+                    var ext = Path.GetExtension(file).ToLowerInvariant();
+                    if (ext == ".mp3" || ext == ".wav" || ext == ".m4a")
+                    {
+                        // Exclude fișierele care sunt ale recorder-ului (recording_*.wav)
+                        if (!file.StartsWith("recording_", StringComparison.OrdinalIgnoreCase))
+                        {
+                            discoveredFiles.Add(file);
+                        }
+                    }
+                }
+            }
+
+            // Încearcă și în subfoldere comune
+            var subfolders = new[] { "Samples", "samples", "Raw", "raw" };
+            foreach (var folder in subfolders)
             {
                 try
                 {
-                    var files = assetManager?.List(basePath);
-                    if (files != null && files.Length > 0)
+                    var files = assetManager?.List(folder);
+                    if (files != null)
                     {
                         foreach (var file in files)
                         {
                             var ext = Path.GetExtension(file).ToLowerInvariant();
                             if (ext == ".mp3" || ext == ".wav" || ext == ".m4a")
                             {
-                                discoveredFiles.Add(file);
+                                // Salvează cu prefix-ul folderului pentru acces
+                                discoveredFiles.Add($"{folder}/{file}");
                             }
-                        }
-                        if (discoveredFiles.Count > 0)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[Samples] Found {discoveredFiles.Count} files in {basePath}");
-                            break;
                         }
                     }
                 }
-                catch { /* încearcă următoarea cale */ }
+                catch { }
             }
+
+            System.Diagnostics.Debug.WriteLine($"[Samples] Discovered {discoveredFiles.Count} audio files in assets");
+            foreach (var f in discoveredFiles)
+                System.Diagnostics.Debug.WriteLine($"[Samples]   - {f}");
         }
         catch (Exception ex)
         {
@@ -106,42 +124,41 @@ public partial class SampleRecordingsViewModel : BaseViewModel
         }
 #endif
 
-        // Fallback: încearcă să deschidă fișiere cunoscute
-        if (discoveredFiles.Count == 0)
+        foreach (var fileName in discoveredFiles)
         {
-            // Încearcă un manifest.json dacă există
+            SampleFiles.Add(new AudioSampleItem
+            {
+                FileName = fileName,
+                DisplayName = Path.GetFileNameWithoutExtension(fileName).Replace("_", " ").Replace("-", " "),
+                Source = "📦 Inclus în app",
+                IsBundled = true
+            });
+        }
+
+        // Dacă nu am găsit nimic prin listare, încearcă manifest.json
+        if (SampleFiles.Count == 0)
+        {
             try
             {
-                using var manifestStream = await FileSystem.OpenAppPackageFileAsync("Samples/manifest.json");
+                using var manifestStream = await FileSystem.OpenAppPackageFileAsync("manifest.json");
                 using var reader = new System.IO.StreamReader(manifestStream);
                 var json = await reader.ReadToEndAsync();
                 var files = System.Text.Json.JsonSerializer.Deserialize<string[]>(json);
                 if (files != null)
-                    discoveredFiles.AddRange(files);
-            }
-            catch { /* nu există manifest */ }
-        }
-
-        foreach (var fileName in discoveredFiles)
-        {
-            try
-            {
-                using var stream = await FileSystem.OpenAppPackageFileAsync($"Samples/{fileName}");
-                if (stream != null)
                 {
-                    SampleFiles.Add(new AudioSampleItem
+                    foreach (var f in files)
                     {
-                        FileName = fileName,
-                        DisplayName = Path.GetFileNameWithoutExtension(fileName).Replace("_", " "),
-                        Source = "📦 Inclus în app",
-                        IsBundled = true
-                    });
+                        SampleFiles.Add(new AudioSampleItem
+                        {
+                            FileName = f,
+                            DisplayName = Path.GetFileNameWithoutExtension(f).Replace("_", " "),
+                            Source = "📦 Inclus în app",
+                            IsBundled = true
+                        });
+                    }
                 }
             }
-            catch
-            {
-                System.Diagnostics.Debug.WriteLine($"[Samples] Could not open: {fileName}");
-            }
+            catch { }
         }
     }
 
@@ -288,11 +305,18 @@ public partial class SampleRecordingsViewModel : BaseViewModel
         var tempDir = Path.Combine(FileSystem.CacheDirectory, "samples");
         Directory.CreateDirectory(tempDir);
 
-        var destPath = Path.Combine(tempDir, fileName);
+        var safeFileName = Path.GetFileName(fileName); // elimină eventualul prefix de folder
+        var destPath = Path.Combine(tempDir, safeFileName);
 
         if (!File.Exists(destPath))
         {
-            using var stream = await FileSystem.OpenAppPackageFileAsync($"Samples/{fileName}");
+#if ANDROID
+            // Pe Android, accesăm direct prin AssetManager
+            var assetManager = Android.App.Application.Context.Assets;
+            using var stream = assetManager!.Open(fileName);
+#else
+            using var stream = await FileSystem.OpenAppPackageFileAsync(fileName);
+#endif
             using var dest = File.Create(destPath);
             await stream.CopyToAsync(dest);
         }
