@@ -64,20 +64,68 @@ public partial class SampleRecordingsViewModel : BaseViewModel
 
     private async Task LoadBundledSamplesAsync()
     {
-        // Fișierele bundled sunt listate manual aici
-        // (MAUI nu permite listarea dinamică a fișierelor din Raw assets)
-        var bundledFiles = new[]
-        {
-            "sample_test1.wav",
-            "sample_test2.wav",
-            "sample_test3.wav"
-        };
+        var discoveredFiles = new List<string>();
 
-        foreach (var fileName in bundledFiles)
+#if ANDROID
+        // Pe Android putem lista dinamic fișierele din assets
+        try
+        {
+            var assetManager = Android.App.Application.Context.Assets;
+            
+            // Încearcă diferite căi posibile unde MAUI pune Raw assets
+            var possiblePaths = new[] { "Samples", "Resources/Raw/Samples", "raw/Samples" };
+            
+            foreach (var basePath in possiblePaths)
+            {
+                try
+                {
+                    var files = assetManager?.List(basePath);
+                    if (files != null && files.Length > 0)
+                    {
+                        foreach (var file in files)
+                        {
+                            var ext = Path.GetExtension(file).ToLowerInvariant();
+                            if (ext == ".mp3" || ext == ".wav" || ext == ".m4a")
+                            {
+                                discoveredFiles.Add(file);
+                            }
+                        }
+                        if (discoveredFiles.Count > 0)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[Samples] Found {discoveredFiles.Count} files in {basePath}");
+                            break;
+                        }
+                    }
+                }
+                catch { /* încearcă următoarea cale */ }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Samples] Error listing assets: {ex.Message}");
+        }
+#endif
+
+        // Fallback: încearcă să deschidă fișiere cunoscute
+        if (discoveredFiles.Count == 0)
+        {
+            // Încearcă un manifest.json dacă există
+            try
+            {
+                using var manifestStream = await FileSystem.OpenAppPackageFileAsync("Samples/manifest.json");
+                using var reader = new System.IO.StreamReader(manifestStream);
+                var json = await reader.ReadToEndAsync();
+                var files = System.Text.Json.JsonSerializer.Deserialize<string[]>(json);
+                if (files != null)
+                    discoveredFiles.AddRange(files);
+            }
+            catch { /* nu există manifest */ }
+        }
+
+        foreach (var fileName in discoveredFiles)
         {
             try
             {
-                // Verifică dacă fișierul există în bundle
                 using var stream = await FileSystem.OpenAppPackageFileAsync($"Samples/{fileName}");
                 if (stream != null)
                 {
@@ -92,7 +140,7 @@ public partial class SampleRecordingsViewModel : BaseViewModel
             }
             catch
             {
-                // Fișierul nu există în bundle, skip
+                System.Diagnostics.Debug.WriteLine($"[Samples] Could not open: {fileName}");
             }
         }
     }
@@ -193,6 +241,10 @@ public partial class SampleRecordingsViewModel : BaseViewModel
                 TranscriptionText = string.Empty;
                 return;
             }
+
+            // Convertește la WAV dacă e MP3/M4A
+            TranscriptionText = "Convertesc audio...";
+            audioPath = await AudioConverterService.EnsureWavAsync(audioPath);
 
             var text = await _whisperService.TranscribeAsync(audioPath);
             TranscriptionText = text;
