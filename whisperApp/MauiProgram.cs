@@ -49,6 +49,7 @@ public static class MauiProgram
         services.AddTransient<LoginViewModel>();
         services.AddTransient<RegisterViewModel>();
         services.AddTransient<RecorderViewModel>();
+        services.AddTransient<SampleRecordingsViewModel>();
         services.AddTransient<HistoryViewModel>();
 
         // ============================================================
@@ -57,6 +58,7 @@ public static class MauiProgram
         services.AddTransient<LoginPage>();
         services.AddTransient<RegisterPage>();
         services.AddTransient<RecorderPage>();
+        services.AddTransient<SampleRecordingsPage>();
         services.AddTransient<HistoryPage>();
 
         return builder.Build();

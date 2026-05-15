@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:WhisperOfflineApp.ViewModels"
+             x:Class="WhisperOfflineApp.Views.SampleRecordingsPage"
+             BackgroundColor="{StaticResource PageBackground}"
+             Title="Samples">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20">
+
+            <!-- Header -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="🎵 Audio Samples" 
+                       FontSize="22" FontAttributes="Bold"
+                       TextColor="{StaticResource TextPrimary}"/>
+                <Label Text="Alege o înregistrare pentru a testa transcrierea"
+                       FontSize="13" TextColor="{StaticResource TextSecondary}"/>
+            </VerticalStackLayout>
+
+            <!-- Model loading -->
+            <Border BackgroundColor="{StaticResource CardBackground}"
+                    Stroke="{StaticResource BorderDefault}" StrokeThickness="1"
+                    IsVisible="{Binding IsModelLoading}" Padding="20">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                    <ActivityIndicator IsRunning="True" WidthRequest="32" HeightRequest="32"/>
+                    <Label Text="{Binding ModelLoadingStatus}"
+                           TextColor="{StaticResource TextSecondary}"
+                           HorizontalOptions="Center" FontSize="13"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Error -->
+            <Border BackgroundColor="#2D1215" Stroke="{StaticResource AccentRed}"
+                    StrokeThickness="1" IsVisible="{Binding HasError}" Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource AccentRed}" FontSize="13"/>
+            </Border>
+
+            <!-- Import button -->
+            <Button Text="📂 Importă fișier audio"
+                    Command="{Binding ImportAudioCommand}"
+                    BackgroundColor="{StaticResource AccentBlue}"
+                    TextColor="White"
+                    FontSize="15" FontAttributes="Bold"
+                    CornerRadius="12" HeightRequest="48"/>
+
+            <!-- Lista de samples -->
+            <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding SampleFiles}">
+                <BindableLayout.EmptyView>
+                    <Border BackgroundColor="{StaticResource CardBackground}"
+                            Stroke="{StaticResource BorderDefault}" StrokeThickness="1"
+                            Padding="24">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12"/>
+                        </Border.StrokeShape>
+                        <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                            <Label Text="🎧" FontSize="32" HorizontalOptions="Center"/>
+                            <Label Text="Niciun sample disponibil"
+                                   TextColor="{StaticResource TextSecondary}"
+                                   FontSize="14" HorizontalOptions="Center"/>
+                            <Label Text="Importă un fișier audio sau adaugă .wav în Resources/Raw/Samples/"
+                                   TextColor="{StaticResource TextMuted}"
+                                   FontSize="12" HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </BindableLayout.EmptyView>
+
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AudioSampleItem">
+                        <Border BackgroundColor="{StaticResource CardBackground}"
+                                Stroke="{StaticResource BorderDefault}" StrokeThickness="1"
+                                Padding="16">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+                                <!-- Info -->
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="{Binding DisplayName}"
+                                           TextColor="{StaticResource TextPrimary}"
+                                           FontSize="15" FontAttributes="Bold"
+                                           LineBreakMode="TailTruncation"/>
+                                    <Label Text="{Binding Source}"
+                                           TextColor="{StaticResource TextMuted}"
+                                           FontSize="12"/>
+                                </VerticalStackLayout>
+
+                                <!-- Transcribe button -->
+                                <Button Grid.Column="1"
+                                        Text="▶️"
+                                        FontSize="18"
+                                        WidthRequest="44" HeightRequest="44"
+                                        CornerRadius="22"
+                                        BackgroundColor="{StaticResource AccentGreenDark}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SampleRecordingsViewModel}}, Path=TranscribeSampleCommand}"
+                                        CommandParameter="{Binding .}"/>
+
+                                <!-- Delete button (doar pentru importate) -->
+                                <Button Grid.Column="2"
+                                        Text="🗑️"
+                                        FontSize="16"
+                                        WidthRequest="40" HeightRequest="40"
+                                        CornerRadius="20"
+                                        BackgroundColor="Transparent"
+                                        IsVisible="{Binding IsBundled, Converter={StaticResource InvertedBoolConverter}}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SampleRecordingsViewModel}}, Path=DeleteSampleCommand}"
+                                        CommandParameter="{Binding .}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <!-- Transcribing indicator -->
+            <Border BackgroundColor="{StaticResource CardBackground}"
+                    Stroke="{StaticResource AccentBlue}" StrokeThickness="1"
+                    IsVisible="{Binding IsTranscribing}" Padding="20">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+                    <ActivityIndicator IsRunning="True" WidthRequest="32" HeightRequest="32"/>
+                    <Label Text="{Binding SelectedFileName, StringFormat='Transcriu: {0}'}"
+                           TextColor="{StaticResource TextPrimary}"
+                           FontSize="15" HorizontalOptions="Center"/>
+                    <Label Text="Aceasta poate dura câteva secunde"
+                           TextColor="{StaticResource TextMuted}"
+                           FontSize="12" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Rezultat transcriere -->
+            <Border BackgroundColor="{StaticResource CardBackground}"
+                    Stroke="{StaticResource AccentGreen}" StrokeThickness="1"
+                    IsVisible="{Binding TranscriptionText, Converter={StaticResource StringToBoolConverter}}"
+                    Padding="20">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="✅" FontSize="14" VerticalOptions="Center"/>
+                        <Label Text="Transcriere completă"
+                               TextColor="{StaticResource AccentGreen}"
+                               FontSize="13" FontAttributes="Bold"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                    <BoxView HeightRequest="1" BackgroundColor="{StaticResource BorderDefault}"/>
+                    <Label Text="{Binding TranscriptionText}"
+                           TextColor="{StaticResource TextPrimary}"
+                           FontSize="16" LineHeight="1.4"/>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

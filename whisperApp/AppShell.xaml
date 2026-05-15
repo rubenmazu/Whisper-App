@@ -27,6 +27,10 @@
                       ContentTemplate="{DataTemplate views:RecorderPage}"
                       Route="RecorderPage"/>
 
+        <ShellContent Title="Samples"
+                      ContentTemplate="{DataTemplate views:SampleRecordingsPage}"
+                      Route="SampleRecordingsPage"/>
+
         <ShellContent Title="Istoric"
                       ContentTemplate="{DataTemplate views:HistoryPage}"
                       Route="HistoryPage"/>
