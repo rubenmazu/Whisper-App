@@ -87,7 +87,7 @@
 		<AndroidAsset Include="Resources\Raw\vocab.json" />
 		<AndroidAsset Include="Resources\Raw\special_tokens.json" />
 		<AndroidAsset Include="Resources\Raw\model_config.json" />
-		<AndroidAsset Include="Resources\Raw\Samples\*" />
+		<AndroidAsset Include="Resources\Raw\Samples\**\*" />
 	</ItemGroup>
 
 </Project>
