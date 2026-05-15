@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WhisperOfflineApp.Views.ModelSetupPage"
+             BackgroundColor="{StaticResource PageBackground}"
+             Shell.NavBarIsVisible="False"
+             Title="Setup">
+
+    <Grid Padding="32" VerticalOptions="Center">
+        <VerticalStackLayout Spacing="24" VerticalOptions="Center">
+
+            <!-- Icon -->
+            <Label Text="🧠" FontSize="64" HorizontalOptions="Center"/>
+
+            <!-- Title -->
+            <Label Text="Configurare Model AI"
+                   FontSize="22" FontAttributes="Bold"
+                   TextColor="{StaticResource TextPrimary}"
+                   HorizontalOptions="Center"/>
+
+            <!-- Status -->
+            <Border BackgroundColor="{StaticResource CardBackground}"
+                    Stroke="{StaticResource BorderDefault}" StrokeThickness="1"
+                    Padding="20">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="12">
+                    <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                       IsVisible="{Binding IsLoading}"
+                                       WidthRequest="32" HeightRequest="32"
+                                       HorizontalOptions="Center"/>
+                    <Label x:Name="StatusLabel"
+                           Text="{Binding StatusMessage}"
+                           TextColor="{StaticResource TextSecondary}"
+                           FontSize="14"
+                           HorizontalTextAlignment="Center"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Error / Instructions -->
+            <Border BackgroundColor="#2D1215"
+                    Stroke="{StaticResource AccentRed}" StrokeThickness="1"
+                    Padding="16"
+                    IsVisible="{Binding ShowError}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="⚠️ Modelele AI lipsesc"
+                           TextColor="{StaticResource AccentRed}"
+                           FontAttributes="Bold" FontSize="15"/>
+                    <Label Text="Copiază fișierele în /sdcard/Download/ folosind ADB:"
+                           TextColor="{StaticResource TextSecondary}" FontSize="13"/>
+                    <Border BackgroundColor="#1a1a2e" Padding="12">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        <Label Text="adb push encoder.onnx /sdcard/Download/&#x0a;adb push decoder.onnx /sdcard/Download/"
+                               TextColor="{StaticResource AccentBlue}"
+                               FontSize="12" FontFamily="monospace"/>
+                    </Border>
+                    <Label Text="Apoi apasă butonul de mai jos."
+                           TextColor="{StaticResource TextSecondary}" FontSize="13"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Retry button -->
+            <Button Text="🔄 Reîncearcă"
+                    IsVisible="{Binding ShowError}"
+                    BackgroundColor="{StaticResource AccentBlue}"
+                    TextColor="White"
+                    FontSize="15" FontAttributes="Bold"
+                    CornerRadius="12" HeightRequest="48"
+                    Clicked="OnRetryClicked"/>
+
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

@@ -80,10 +80,10 @@
 		<MauiFont Include="Resources\Fonts\*" />
 	</ItemGroup>
 
-	<!-- Modelele AI ca Raw assets pentru Android -->
+	<!-- Modelele AI - NU sunt bundled în APK (prea mari ~1.1GB) -->
+	<!-- Se copiază manual prin ADB: adb push encoder.onnx /sdcard/Download/ -->
+	<!-- App-ul le copiază automat din /sdcard/Download/ la prima rulare -->
 	<ItemGroup Condition="$(TargetFramework.Contains('android'))">
-		<AndroidAsset Include="Resources\Raw\encoder.onnx" />
-		<AndroidAsset Include="Resources\Raw\decoder.onnx" />
 		<AndroidAsset Include="Resources\Raw\vocab.json" />
 		<AndroidAsset Include="Resources\Raw\special_tokens.json" />
 		<AndroidAsset Include="Resources\Raw\model_config.json" />

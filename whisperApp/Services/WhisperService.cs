@@ -37,47 +37,49 @@ public class WhisperService : IWhisperService, IDisposable
             progress?.Report("Pregătesc modelul...");
             System.Diagnostics.Debug.WriteLine("Starting model load...");
 
-            // Extrage modelele din APK assets în directorul local
-            await ExtractAssetsAsync(progress);
-
             var modelDir = GetModelDirectory();
             System.Diagnostics.Debug.WriteLine($"Model directory: {modelDir}");
 
+            // Verifică dacă modelele există (ar trebui să fie deja copiate de ModelSetupService)
+            var encoderPath = Path.Combine(modelDir, "encoder.onnx");
+            var decoderPath = Path.Combine(modelDir, "decoder.onnx");
+
+            if (!File.Exists(encoderPath) || !File.Exists(decoderPath))
+            {
+                // Fallback: încearcă setup-ul direct
+                progress?.Report("Modelele lipsesc, încerc să le găsesc...");
+                var setupService = new ModelSetupService();
+                var setupResult = await setupService.SetupModelsAsync(progress);
+                if (!setupResult)
+                {
+                    throw new FileNotFoundException(
+                        "Modelele ONNX nu sunt disponibile. Copiază encoder.onnx și decoder.onnx în /sdcard/Download/ și repornește app-ul.");
+                }
+            }
+
+            // Extrage fișierele mici (vocab, config) dacă nu sunt deja
+            await ExtractSmallAssetsAsync(modelDir, progress);
+
             progress?.Report("Încarc encoder...");
-            var encoderPath = Path.Combine(modelDir, "encoder.onnx");  // Non-quantized
             System.Diagnostics.Debug.WriteLine($"Encoder path: {encoderPath}");
             System.Diagnostics.Debug.WriteLine($"Encoder exists: {File.Exists(encoderPath)}");
-
-            if (!File.Exists(encoderPath))
-            {
-                throw new FileNotFoundException($"Encoder not found at {encoderPath}");
-            }
 
             // Configurare optimizată pentru Android CPU
             var sessionOptions = new SessionOptions
             {
                 GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_EXTENDED,
                 ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
-                InterOpNumThreads = 2,  // Redus pentru stabilitate
-                IntraOpNumThreads = 2,  // Redus pentru stabilitate
+                InterOpNumThreads = 2,
+                IntraOpNumThreads = 2,
                 EnableMemoryPattern = true,
             };
-            
-            // NU folosim AppendExecutionProvider pe Android - CPU e default
 
             _encoderSession = new InferenceSession(encoderPath, sessionOptions);
             System.Diagnostics.Debug.WriteLine("Encoder loaded successfully");
 
             progress?.Report("Încarc decoder...");
-            var decoderPath = Path.Combine(modelDir, "decoder.onnx");  // Non-quantized
             System.Diagnostics.Debug.WriteLine($"Decoder path: {decoderPath}");
             
-            if (!File.Exists(decoderPath))
-            {
-                throw new FileNotFoundException($"Decoder not found at {decoderPath}");
-            }
-            
-            System.Diagnostics.Debug.WriteLine("Loading decoder session...");
             _decoderSession = new InferenceSession(decoderPath, sessionOptions);
             System.Diagnostics.Debug.WriteLine("Decoder loaded successfully");
 
@@ -101,115 +103,60 @@ public class WhisperService : IWhisperService, IDisposable
                 System.Diagnostics.Debug.WriteLine($"Inner stack trace: {ex.InnerException.StackTrace}");
             }
             
-            // Afișează eroarea detaliată în UI
             var shortError = ex.Message.Length > 100 ? ex.Message.Substring(0, 100) + "..." : ex.Message;
             progress?.Report($"Eroare: {shortError}");
             return false;
         }
     }
 
-    private async Task ExtractAssetsAsync(IProgress<string>? progress)
+    private async Task ExtractSmallAssetsAsync(string modelDir, IProgress<string>? progress)
     {
-        var modelDir = GetModelDirectory();
-        Directory.CreateDirectory(modelDir);
+        var smallAssets = new[] { "vocab.json", "special_tokens.json", "model_config.json" };
 
-        var assets = new[]
-        {
-            "encoder.onnx",  // Non-quantized
-            "decoder.onnx",  // Non-quantized
-            "vocab.json",
-            "special_tokens.json",
-            "model_config.json"
-        };
-
-#if ANDROID
-        // Debug: Listează toate asset-urile disponibile
-        try
-        {
-            var assetManager = Android.App.Application.Context.Assets;
-            var allAssets = assetManager?.List("");
-            System.Diagnostics.Debug.WriteLine($"Available assets in root: {string.Join(", ", allAssets ?? new string[0])}");
-            
-            // Verifică și în Resources/Raw
-            var rawAssets = assetManager?.List("Resources/Raw");
-            if (rawAssets != null && rawAssets.Length > 0)
-            {
-                System.Diagnostics.Debug.WriteLine($"Available assets in Resources/Raw: {string.Join(", ", rawAssets)}");
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error listing assets: {ex.Message}");
-        }
-#endif
-
-        foreach (var asset in assets)
+        foreach (var asset in smallAssets)
         {
             var destPath = Path.Combine(modelDir, asset);
+            if (File.Exists(destPath)) continue;
 
-            // Copiem doar dacă nu există deja (optimizare)
-            if (!File.Exists(destPath))
+            progress?.Report($"Extrag {asset}...");
+            try
             {
-                progress?.Report($"Extrag {asset}...");
-                
-                try
-                {
 #if ANDROID
-                    // Pe Android, încearcă mai multe căi posibile
-                    var assetManager = Android.App.Application.Context.Assets;
-                    Stream? stream = null;
-                    
-                    // Încearcă diferite căi
-                    var possiblePaths = new[]
-                    {
-                        asset,  // Direct în root
-                        $"Resources/Raw/{asset}",  // În Resources/Raw
-                        $"raw/{asset}",  // În raw folder
-                        $"assets/{asset}"  // În assets folder
-                    };
-                    
-                    foreach (var path in possiblePaths)
-                    {
-                        try
-                        {
-                            stream = assetManager?.Open(path);
-                            if (stream != null)
-                            {
-                                System.Diagnostics.Debug.WriteLine($"Found {asset} at path: {path}");
-                                break;
-                            }
-                        }
-                        catch
-                        {
-                            // Încearcă următoarea cale
-                        }
-                    }
-                    
-                    if (stream == null)
-                    {
-                        throw new FileNotFoundException($"Asset {asset} not found in any known location");
-                    }
-#else
-                    // Pe alte platforme, folosim FileSystem
-                    using var stream = await FileSystem.OpenAppPackageFileAsync(asset);
-#endif
-                    using (stream)
-                    {
-                        using var dest = File.Create(destPath);
-                        await stream.CopyToAsync(dest);
-                    }
-                    
-                    System.Diagnostics.Debug.WriteLine($"Extracted {asset} successfully to {destPath}");
-                }
-                catch (Exception ex)
+                var assetManager = Android.App.Application.Context.Assets;
+                Stream? stream = null;
+                var possiblePaths = new[] { asset, $"Resources/Raw/{asset}" };
+                foreach (var path in possiblePaths)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Failed to extract {asset}: {ex.Message}");
-                    throw new Exception($"Nu am putut extrage {asset}: {ex.Message}");
+                    try
+                    {
+                        stream = assetManager?.Open(path);
+                        if (stream != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Found {asset} at path: {path}");
+                            break;
+                        }
+                    }
+                    catch { }
                 }
+                if (stream == null)
+                    throw new FileNotFoundException($"Asset {asset} not found");
+
+                using (stream)
+                {
+                    using var dest = File.Create(destPath);
+                    await stream.CopyToAsync(dest);
+                }
+#else
+                using var stream = await FileSystem.OpenAppPackageFileAsync(asset);
+                using var dest = File.Create(destPath);
+                await stream.CopyToAsync(dest);
+#endif
+                System.Diagnostics.Debug.WriteLine($"Extracted {asset} successfully to {destPath}");
             }
-            else
+            catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"{asset} already exists at {destPath}, skipping extraction");
+                System.Diagnostics.Debug.WriteLine($"Failed to extract {asset}: {ex.Message}");
+                throw;
             }
         }
     }

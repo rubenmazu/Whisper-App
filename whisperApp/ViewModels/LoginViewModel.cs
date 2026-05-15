@@ -34,8 +34,8 @@ public partial class LoginViewModel : BaseViewModel
 
             if (result.IsSuccess)
             {
-                // Navighează la tab-ul principal
-                await Shell.Current.GoToAsync("//MainTabs");
+                // Navighează la setup modele (verifică dacă sunt disponibile)
+                await Shell.Current.GoToAsync("//ModelSetupPage");
             }
             else
             {

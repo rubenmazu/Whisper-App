@@ -21,6 +21,11 @@
                   ContentTemplate="{DataTemplate views:RegisterPage}"
                   FlyoutItemIsVisible="False"/>
 
+    <!-- Model Setup (first-run, verifică dacă modelele sunt disponibile) -->
+    <ShellContent Route="ModelSetupPage"
+                  ContentTemplate="{DataTemplate views:ModelSetupPage}"
+                  FlyoutItemIsVisible="False"/>
+
     <!-- Tab Bar pentru aplicația principală -->
     <TabBar Route="MainTabs" FlyoutItemIsVisible="False">
         <ShellContent Title="Înregistrare"

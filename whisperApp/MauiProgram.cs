@@ -34,6 +34,9 @@ public static class MauiProgram
         // Database - singleton pentru conexiune persistentă
         services.AddSingleton<IDatabaseService, DatabaseService>();
 
+        // Model Setup - gestionează descoperirea/copierea modelelor ONNX
+        services.AddSingleton<IModelSetupService, ModelSetupService>();
+
         // Whisper - singleton esențial! Modelul se încarcă o singură dată
         services.AddSingleton<IWhisperService, WhisperService>();
 
@@ -57,6 +60,7 @@ public static class MauiProgram
         // ============================================================
         services.AddTransient<LoginPage>();
         services.AddTransient<RegisterPage>();
+        services.AddTransient<ModelSetupPage>();
         services.AddTransient<RecorderPage>();
         services.AddTransient<SampleRecordingsPage>();
         services.AddTransient<HistoryPage>();
